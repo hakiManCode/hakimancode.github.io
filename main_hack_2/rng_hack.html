@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RNG Unlimited</title>
+  <link rel="stylesheet" href="rng_hack.css">
+  <link rel="icon" type="image/png" href="../hack2_pics/mouse_cursor_project_2_hack.png">
+</head>
+<body>
+  <div class="container">
+    <div class="intro">
+      <h1>RNG Unlimited</h1>
+      <p>Welcome to RNG Unlimited! Try your luck, and exceed beyond the limits.</p>
+    </div>
+
+    <div class="interactions">
+      <button id="rngbutton" onclick="roll()">Roll</button>
+    </div>
+
+    <div class="output">
+      <p id="rarity">Click "Roll" to start!</p>
+    </div>
+
+    <!-- Stats Panel -->
+    <div id="stats" class="stats">
+      <h2>Stats</h2>
+      <ul id="stats-list"></ul>
+    </div>
+
+    <!-- Pity Panel -->
+    <div id="pity" class="pity">
+      <h2>Pity Counters</h2>
+      <ul id="pity-list"></ul>
+    </div>
+  </div>
+
+  <!-- Screen Effect Overlay -->
+  <div id="screen-effect"></div>
+
+  <!-- Particle Container -->
+  <div id="particle-container"></div>
+
+  <!-- JS -->
+  <script src="rng_hack.js"></script>
+</body>
+</html>
