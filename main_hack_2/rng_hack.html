@@ -6,9 +6,20 @@
   <title>RNG Unlimited</title>
   <link rel="stylesheet" href="rng_hack.css">
   <link rel="icon" type="image/png" href="../hack2_pics/mouse_cursor_project_2_hack.png">
+  <style>html,body{background:#0b0b0b;}</style>
+  <script>
+  (function(){
+    try {
+      var theme = localStorage.getItem('theme');
+      if (theme) { document.documentElement.dataset.theme = theme; }
+    } catch(e) {}
+  })();
+</script>  
 </head>
 <body>
-  <div class="container">
+  <div id="app" class="app-root">
+    <main class="main">
+        <div class="container">
     <div class="intro">
       <h1>RNG Unlimited</h1>
       <p>Welcome to RNG Unlimited! Try your luck, and exceed beyond the limits.</p>
@@ -22,7 +33,17 @@
       <p id="rarity">Click "Roll" to start!</p>
     </div>
 
-    <!-- Stats Panel -->
+  <!-- Screen Effect Overlay -->
+  <div id="screen-effect"></div>
+
+  <!-- Particle Container -->
+  <div id="particle-container"></div>
+
+  <!-- JS -->
+  <script src="rng_hack.js"></script>
+    </main>
+    <footer class="stats=footer">
+          <!-- Stats Panel -->
     <div id="stats" class="stats">
       <h2>Stats</h2>
       <ul id="stats-list"></ul>
@@ -34,14 +55,6 @@
       <ul id="pity-list"></ul>
     </div>
   </div>
-
-  <!-- Screen Effect Overlay -->
-  <div id="screen-effect"></div>
-
-  <!-- Particle Container -->
-  <div id="particle-container"></div>
-
-  <!-- JS -->
-  <script src="rng_hack.js"></script>
+  </footer>
 </body>
 </html>
