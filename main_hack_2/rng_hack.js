@@ -295,3 +295,5 @@ function showDevPanel() {
     });
   }
 }
+
+document.getElementById("dev-unlock")?.addEventListener("click", showDevPanel());
