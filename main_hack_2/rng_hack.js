@@ -9,121 +9,81 @@ const rarities = [
   { name: "Ultra Rare", color: "red", chance: 512 },
   { name: "Legendary", color: "orange", chance: 1024 },
   { name: "Mythic", color: "yellow", chance: 10000 },
-  { name: "Thunderous", color: "cyan", chance: 100000 },
 ];
 
-// -------------------- STORAGE --------------------
+// -------------------- STORAGE / STATE --------------------
 let stats = JSON.parse(localStorage.getItem("stats")) || {};
-let pity = JSON.parse(localStorage.getItem("pity")) || {
-  ultra: 0,
-  legendary: 0,
-  mythic: 0,
-};
+let pity = JSON.parse(localStorage.getItem("pity")) || { ultra: 0, legendary: 0, mythic: 0 };
 let rolling = false;
-let rollBuff = JSON.parse(localStorage.getItem("rollBuff")) || false;
+let rollCount = rarities.reduce((sum, r) => sum + (stats[r.name] || 0), 0);
+let buffActive = JSON.parse(localStorage.getItem("buffActive")) || false;
+let fastRoll = false; // dev feature
 
-// Initialize stats
+// ensure stats keys exist
 rarities.forEach(r => { if (!stats[r.name]) stats[r.name] = 0; });
 updateStats();
 updatePity();
-updateBuffUI();
+updateBuffButton();
 
 // -------------------- UTILITY --------------------
 function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-// Weighted function for actual rolls
-function getRarity() {
+// Weighted rarity (actual roll)
+function getWeightedRarity() {
   const ultraMultiplier = pity.ultra >= 300 ? 10 : 1;
   const legendaryMultiplier = pity.legendary >= 700 ? 50 : 1;
   const mythicMultiplier = pity.mythic >= 1000 ? 100 : 1;
-  const buffMultiplier = rollBuff ? 1.2 : 1;
 
-  const totalWeight = rarities.reduce((sum,r)=>{
-    let weight = (1/r.chance)*buffMultiplier;
-    if(r.name==="Ultra Rare") weight*=ultraMultiplier;
-    if(r.name==="Legendary") weight*=legendaryMultiplier;
-    if(r.name==="Mythic") weight*= mythicMultiplier;
-    return sum+weight;
-  },0);
+  const totalWeight = rarities.reduce((sum, r) => {
+    let weight = 1 / r.chance;
+    if (r.name === "Ultra Rare") weight *= ultraMultiplier;
+    if (r.name === "Legendary") weight *= legendaryMultiplier;
+    if (r.name === "Mythic") weight *= mythicMultiplier;
+    return sum + weight;
+  }, 0);
 
-  let pick = Math.random()*totalWeight;
-  for(let r of rarities){
-    let weight = (1/r.chance)*buffMultiplier;
-    if(r.name==="Ultra Rare") weight*=ultraMultiplier;
-    if(r.name==="Legendary") weight*=legendaryMultiplier;
-    if(r.name==="Mythic") weight*= mythicMultiplier;
+  let pick = Math.random() * totalWeight;
+  for (let r of rarities) {
+    let weight = 1 / r.chance;
+    if (r.name === "Ultra Rare") weight *= ultraMultiplier;
+    if (r.name === "Legendary") weight *= legendaryMultiplier;
+    if (r.name === "Mythic") weight *= mythicMultiplier;
     pick -= weight;
-    if(pick<=0) return r;
+    if (pick <= 0) return r;
   }
   return rarities[0];
 }
 
-// Weighted function for fake cutscene rolls (no stats/pity)
+// Fake cutscene uses the same weighting but doesn't affect stats/pity
 function getFakeRarity() {
-  const ultraMultiplier = pity.ultra >= 300 ? 10 : 1;
-  const legendaryMultiplier = pity.legendary >= 700 ? 50 : 1;
-  const mythicMultiplier = pity.mythic >= 1000 ? 100 : 1;
-  const buffMultiplier = rollBuff ? 1.2 : 1;
-
-  const totalWeight = rarities.reduce((sum,r)=>{
-    let weight = (1/r.chance)*buffMultiplier;
-    if(r.name==="Ultra Rare") weight*=ultraMultiplier;
-    if(r.name==="Legendary") weight*=legendaryMultiplier;
-    if(r.name==="Mythic") weight*= mythicMultiplier;
-    return sum+weight;
-  },0);
-
-  let pick = Math.random()*totalWeight;
-  for(let r of rarities){
-    let weight = (1/r.chance)*buffMultiplier;
-    if(r.name==="Ultra Rare") weight*=ultraMultiplier;
-    if(r.name==="Legendary") weight*=legendaryMultiplier;
-    if(r.name==="Mythic") weight*= mythicMultiplier;
-    pick -= weight;
-    if(pick<=0) return r;
-  }
-  return rarities[0];
+  return getWeightedRarity();
 }
 
-// -------------------- SCREEN EFFECT --------------------
-function triggerScreenEffect(rarity){
+// -------------------- EFFECTS --------------------
+function triggerScreenEffect(rarity) {
   const screen = document.getElementById("screen-effect");
-
-  // Reset
+  if (!screen) return;
   screen.className = "";
   void screen.offsetWidth;
-
-  let cls = "effect-" + rarity.name.toLowerCase().replace(" ","");
+  const cls = "effect-" + rarity.name.toLowerCase().replace(/\s+/g, "");
   screen.classList.add(cls);
 
-  // Flash: fade out
   screen.style.opacity = "1";
-
-  if(rarity.name==="Thunderous") {
-    // Extra: shake window & brief cyan lightning
-    document.body.classList.add("shake");
-    setTimeout(()=>document.body.classList.remove("shake"), 750);
-
-    // Optional lightning flash
-    screen.style.background = "rgba(0,255,255,0.5)";
-    setTimeout(()=> screen.style.background = "", 150);
-  }
-
-  setTimeout(()=>{ screen.style.opacity = "0"; }, 300);
+  setTimeout(() => { screen.style.opacity = "0"; }, 320);
 }
 
-// -------------------- PARTICLES --------------------
-function spawnParticles(rarity){
-  if(!["Epic","Ultra Rare","Legendary","Mythic","Thunderous"].includes(rarity.name)) return;
+function spawnParticles(rarity) {
+  if (!["Epic", "Ultra Rare", "Legendary", "Mythic"].includes(rarity.name)) return;
   const container = document.getElementById("particle-container");
-  for(let i=0;i<30;i++){
+  if (!container) return;
+  for (let i = 0; i < 30; i++) {
     const p = document.createElement("div");
-    p.className="particle";
-    p.style.left = randInt(0,window.innerWidth)+"px";
-    p.style.top = randInt(0,window.innerHeight)+"px";
+    p.className = "particle";
+    p.style.left = `${randInt(0, window.innerWidth)}px`;
+    p.style.top = `${randInt(0, window.innerHeight)}px`;
     p.style.backgroundColor = rarity.color;
     container.appendChild(p);
-    setTimeout(()=>p.remove(),1200);
+    setTimeout(() => p.remove(), 1200);
   }
 }
 
@@ -131,108 +91,207 @@ function spawnParticles(rarity){
 async function roll() {
   if (rolling) return;
   rolling = true;
+
   const button = document.getElementById("rngbutton");
-  button.disabled = true;
-
   const display = document.getElementById("rarity");
-  const chanceDisplay = document.getElementById("rarity-chance");
+  const sub = document.getElementById("rarity-chance");
 
-  // Cutscene: weighted fake rarities
-  const totalIterations = 11; // number of fake updates
-  for (let i = 0; i < totalIterations; i++) {
-    const fake = getFakeRarity();
-    display.textContent = fake.name;
-    display.style.color = fake.color;
-    chanceDisplay.textContent = "1 in " + fake.chance;
-
-    // Ease down effect (10px jump)
-    display.style.transition = "none";
-    display.style.transform = "translateY(-10px)";
-    void display.offsetWidth; // force reflow
-    display.style.transition = "transform 0.15s ease-out";
-    display.style.transform = "translateY(0)";
-
-    // Gradually slow down: start fast, then slower
-    const delay = 40 + i * 20; // first iteration 40ms, last ~400ms
-    await new Promise(r => setTimeout(r, delay));
+  if (!display || !sub) {
+    if (button) button.disabled = false;
+    rolling = false;
+    return;
   }
 
-  // Actual roll
-  const result = getRarity();
-  display.textContent = result.name;
-  display.style.color = result.color;
-  chanceDisplay.textContent = "1 in " + result.chance;
+  try {
+    if (button) button.disabled = true;
 
-  // Ease down for final result
-  display.style.transition = "none";
-  display.style.transform = "translateY(-10px)";
-  void display.offsetWidth;
-  display.style.transition = "transform 0.25s ease-out";
-  display.style.transform = "translateY(0)";
+    if (!fastRoll) {
+      display.style.transition = "transform 180ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease";
 
-  // Stats
-  stats[result.name]++;
-  localStorage.setItem("stats", JSON.stringify(stats));
-  updateStats();
+      const iterations = 10;
+      for (let i = 0; i < iterations; i++) {
+        const fake = getFakeRarity();
+        display.textContent = fake.name;
+        display.style.color = fake.color;
+        sub.textContent = `1 in ${fake.chance}`;
 
-  // Pity
-  pity.ultra++; pity.legendary++; pity.mythic++;
-  if (result.name === "Ultra Rare") pity.ultra = 0;
-  if (result.name === "Legendary") pity.legendary = 0;
-  if (result.name === "Mythic") pity.mythic = 0;
-  localStorage.setItem("pity", JSON.stringify(pity));
-  updatePity();
+        display.style.transition = "none";
+        display.style.transform = "translateY(-10px)";
+        void display.offsetWidth;
+        display.style.transition = "transform 160ms cubic-bezier(.2,.9,.2,1)";
+        display.style.transform = "translateY(0)";
 
-  // Effects
-  triggerScreenEffect(result);
-  spawnParticles(result);
+        const delay = 40 + i * 30;
+        await new Promise(res => setTimeout(res, delay));
+      }
+    }
 
-  button.disabled = false;
-  rolling = false;
+    const result = getWeightedRarity();
+
+    display.style.transition = "none";
+    display.style.transform = "translateY(-20px)";
+    display.style.opacity = "0";
+    void display.offsetWidth;
+
+    display.textContent = result.name;
+    display.style.color = result.color;
+    sub.textContent = `1 in ${result.chance}`;
+
+    display.style.transition = "transform 300ms cubic-bezier(.2,.9,.2,1), opacity 300ms ease-out";
+    display.style.transform = "translateY(0)";
+    display.style.opacity = "1";
+
+    stats[result.name] = (stats[result.name] || 0) + 1;
+    localStorage.setItem("stats", JSON.stringify(stats));
+
+    pity.ultra = (pity.ultra || 0) + 1;
+    pity.legendary = (pity.legendary || 0) + 1;
+    pity.mythic = (pity.mythic || 0) + 1;
+    if (result.name === "Ultra Rare") pity.ultra = 0;
+    if (result.name === "Legendary") pity.legendary = 0;
+    if (result.name === "Mythic") pity.mythic = 0;
+    localStorage.setItem("pity", JSON.stringify(pity));
+
+    rollCount++;
+    localStorage.setItem("rollCount", rollCount);
+
+    updateStats();
+    updatePity();
+    updateBuffButton();
+    checkAchievements(result);
+
+    triggerScreenEffect(result);
+    spawnParticles(result);
+
+  } catch (err) {
+    console.error("roll error:", err);
+  } finally {
+    if (button) button.disabled = false;
+    rolling = false;
+  }
 }
 
-// -------------------- BUFF --------------------
-function toggleBuff(){
-  if(rollBuff){
-    rollBuff=false;
-  } else if(getTotalRolls()>=5000){
-    rollBuff=true;
-  } else return;
-  localStorage.setItem("rollBuff", JSON.stringify(rollBuff));
-  updateBuffUI();
-}
-
-function updateBuffUI(){
-  const btn = document.getElementById("buff-button");
-  if(!btn) return;
-  btn.textContent = rollBuff ? "Buff Active (Click to Disable)" : "Purchase Buff (5000 rolls)";
-}
-
-// -------------------- UI --------------------
-function updateStats(){
+// -------------------- STATS / PITY UI --------------------
+function updateStats() {
   const list = document.getElementById("stats-list");
+  const statsTitle = document.querySelector("#stats h2");
+  if (!list || !statsTitle) return;
+
+  // Calculate total rolls
+  const totalRolls = rarities.reduce((sum, r) => sum + (stats[r.name] || 0), 0);
+
+  // Show total rolls in the title
+  statsTitle.textContent = `Stats (Total Rolls: ${totalRolls})`;
+
+  // Clear and rebuild list
   list.innerHTML = "";
-  rarities.forEach(r=>{
+  rarities.forEach(r => {
+    const rolled = stats[r.name] || 0;
     const li = document.createElement("li");
-    const count = stats[r.name];
-    li.textContent = r.name + ": " + (count>0?count:"???");
-    const chance = document.createElement("span");
-    chance.textContent = "1 in " + r.chance;
-    chance.className = "subtext";
-    li.appendChild(chance);
+
+    const nameText = rolled > 0 ? r.name : "???";
+    const chanceText = rolled > 0 ? `1 in ${r.chance}` : "???";
+    const rolledText = rolled > 0 ? rolled : 0;
+
+    li.innerHTML = `${nameText} — Rolled: ${rolledText} <span class="subtext">${chanceText}</span>`;
     list.appendChild(li);
   });
 }
 
+
 function updatePity() {
   const list = document.getElementById("pity-list");
-  list.innerHTML = `Ultra Rare: ${pity.ultra}/300 | Legendary: ${pity.legendary}/700 | Mythic: ${pity.mythic}/1000`;
+  if (!list) return;
+  list.innerHTML = `Ultra Rare: ${pity.ultra || 0}/300 | Legendary: ${pity.legendary || 0}/700 | Mythic: ${pity.mythic || 0}/1000`;
 }
 
-function getTotalRolls(){
-  return rarities.reduce((sum,r)=>sum+(stats[r.name]||0),0);
+// -------------------- BUFF --------------------
+function updateBuffButton() {
+  const buyBtn = document.getElementById('buy-buff');
+  const buffText = document.getElementById('buff-text');
+  if (!buyBtn) return;
+  buyBtn.disabled = rollCount < 5000;
+  buyBtn.title = buyBtn.disabled
+    ? `Need ${5000 - rollCount} more rolls to buy the buff`
+    : 'Buy 1.2x Multiplier (5000 Rolls)';
+  if (buffText) {
+    buffText.textContent = `Total rolls: ${rollCount} | Buffs: ${buffActive ? 'ON' : 'OFF'}`;
+  }
 }
 
-// -------------------- GLOBAL --------------------
-globalThis.roll = roll;
-globalThis.toggleBuff = toggleBuff;
+function buyBuff() {
+  if (rollCount < 5000) return;
+  rollCount -= 5000;
+  buffActive = true;
+  localStorage.setItem("rollCount", rollCount);
+  localStorage.setItem("buffActive", true);
+  updateBuffButton();
+}
+
+document.getElementById('buy-buff')?.addEventListener('click', buyBuff);
+
+// -------------------- ACHIEVEMENTS --------------------
+const achievements = JSON.parse(localStorage.getItem("achievements")) || {
+  "10kRoll": false,
+  "100kRoll": false,
+};
+
+function checkAchievements(rarity) {
+  if (rarity.chance >= 10000 && !achievements["10kRoll"]) {
+    achievements["10kRoll"] = true;
+    alert("🏆 Achievement Unlocked: Hit a 1 in 10,000+ rarity!");
+  }
+  if (rarity.chance >= 100000 && !achievements["100kRoll"]) {
+    achievements["100kRoll"] = true;
+    alert("🏆 Achievement Unlocked: Hit a 1 in 100,000+ rarity!");
+  }
+  localStorage.setItem("achievements", JSON.stringify(achievements));
+  updateAchievementsUI();
+}
+
+function updateAchievementsUI() {
+  const list = document.getElementById("achievements-list");
+  list.innerHTML = "";
+  const data = [
+    { id: "10kRoll", text: "Roll a 10k+ rarity" },
+    { id: "100kRoll", text: "Roll a 100k+ rarity" },
+  ];
+  data.forEach(a => {
+    const li = document.createElement("li");
+    li.textContent = a.text;
+    if (achievements[a.id]) li.classList.add("unlocked");
+    list.appendChild(li);
+  });
+}
+
+document.getElementById("toggle-achievements").addEventListener("click", () => {
+  const panel = document.getElementById("achievements-panel");
+  panel.style.display = panel.style.display === "none" ? "block" : "none";
+});
+updateAchievementsUI();
+
+// -------------------- DEV PANEL --------------------
+function showDevPanel() {
+  const code = prompt("Enter dev access code:");
+  if (code !== "h4ckc1ub") return alert("Wrong code.");
+  let panel = document.getElementById("dev-panel");
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.id = "dev-panel";
+    panel.style.position = "fixed";
+    panel.style.bottom = "10px";
+    panel.style.right = "10px";
+    panel.style.background = "#222";
+    panel.style.color = "#fff";
+    panel.style.padding = "10px";
+    panel.style.borderRadius = "10px";
+    panel.innerHTML = `
+      <h4>Dev Panel</h4>
+      <label><input type="checkbox" id="fast-roll-toggle"> Fast Roll</label>
+    `;
+    document.body.appendChild(panel);
+    document.getElementById("fast-roll-toggle").addEventListener("change", (e) => {
+      fastRoll = e.target.checked;
+    });
+  }
+}

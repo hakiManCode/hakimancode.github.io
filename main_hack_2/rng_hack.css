@@ -202,3 +202,43 @@ html,body{
   transform: none;
   box-shadow: none;
 }
+
+#achievements-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+#toggle-achievements {
+  background: #444;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+#toggle-achievements:hover {
+  background: #666;
+}
+
+#achievements-panel {
+  border: 2px solid #333;
+  border-radius: 10px;
+  padding: 10px;
+  max-width: 300px;
+  margin: 0 auto;
+  background: #222;
+  color: white;
+}
+
+#achievements-list li {
+  list-style: none;
+  padding: 5px 0;
+  border-bottom: 1px solid #444;
+}
+
+#achievements-list li.unlocked {
+  color: gold;
+  font-weight: bold;
+}
