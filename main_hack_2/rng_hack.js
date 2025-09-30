@@ -9,6 +9,7 @@ const rarities = [
   { name: "Ultra Rare", color: "red", chance: 512 },
   { name: "Legendary", color: "orange", chance: 1024 },
   { name: "Mythic", color: "yellow", chance: 10000 },
+  { name: "Luminous", color: "#fffacd", chance: 125000 },
 ];
 
 // -------------------- STORAGE / STATE --------------------
@@ -127,6 +128,10 @@ async function roll() {
     }
 
     const result = getWeightedRarity();
+
+    if (result.name === "Luminous") {
+      await luminousCutscene();
+    }
 
     display.style.transition = "none";
     display.style.transform = "translateY(-20px)";
@@ -296,4 +301,49 @@ function showDevPanel() {
   }
 }
 
-document.getElementById("dev-unlock")?.addEventListener("click", showDevPanel());
+document.getElementById("dev-unlock")?.addEventListener("click", showDevPanel);
+
+// -------------------- LUMINOUS CUTSCENE --------------------
+async function luminousCutscene() {
+  const overlay = document.createElement("div");
+  overlay.id = "luminous-overlay";
+  overlay.innerHTML = `
+    <div class="luminous-gradient"></div>
+    <h1 class="luminous-title">RNG Unlimited</h1>
+    <div id="luminous-particles"></div>
+  `;
+  document.body.appendChild(overlay);
+
+  // spawn glowing particles
+  for (let i = 0; i < 80; i++) {
+    const p = document.createElement("div");
+    p.className = "luminous-particle";
+    p.style.left = `${randInt(0, window.innerWidth)}px`;
+    p.style.top = `${window.innerHeight}px`;
+    document.getElementById("luminous-particles").appendChild(p);
+  }
+
+  // wait 9s, then fade to white + shake
+  await new Promise(res => setTimeout(res, 9000));
+
+  overlay.classList.add("fade-white");
+
+  let intensity = 20;
+  const start = Date.now();
+  const dur = 800;
+  (function shakeFrame() {
+    const elapsed = Date.now() - start;
+    if (elapsed >= dur) {
+      document.body.style.transform = "";
+      return;
+    }
+    const decay = 1 - elapsed / dur;
+    const x = (Math.random() - 0.5) * intensity * decay;
+    const y = (Math.random() - 0.5) * intensity * decay;
+    document.body.style.transform = `translate(${x}px, ${y}px)`;
+    requestAnimationFrame(shakeFrame);
+  })();
+
+  await new Promise(res => setTimeout(res, 1000));
+  overlay.remove();
+}

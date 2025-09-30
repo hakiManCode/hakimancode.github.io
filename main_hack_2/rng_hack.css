@@ -242,3 +242,81 @@ html,body{
   color: gold;
   font-weight: bold;
 }
+
+#buy-buff:disabled {
+  pointer-events: none; /* completely unclickable */
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+#buy-buff:disabled:hover {
+  transform: none;
+  box-shadow: none;
+  background: linear-gradient(180deg, rgba(0,255,255,0.12), rgba(0,255,255,0.06));
+}
+
+/* ---------- Luminous Cutscene ---------- */
+#luminous-overlay {
+  position: fixed;
+  inset: 0;
+  background: black;
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  animation: fadeIn 1s ease forwards;
+}
+
+.luminous-gradient {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(to top, white, black);
+}
+
+.luminous-title {
+  font-family: "Roboto Mono", monospace;
+  font-size: 3rem;
+  color: white;
+  z-index: 10001;
+  text-shadow: 0 0 15px white, 0 0 25px cyan;
+  animation: glowPulse 2s infinite alternate;
+}
+
+#luminous-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.luminous-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 0 8px cyan;
+  animation: floatUp 9s linear forwards;
+}
+
+@keyframes floatUp {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-120vh); opacity: 0; }
+}
+
+@keyframes glowPulse {
+  from { text-shadow: 0 0 10px white, 0 0 20px cyan; }
+  to   { text-shadow: 0 0 25px cyan, 0 0 40px white; }
+}
+
+#luminous-overlay.fade-white {
+  background: white !important;
+  transition: background 1s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
