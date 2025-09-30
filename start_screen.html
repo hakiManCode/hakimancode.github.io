@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Start - RNG Unlimited</title>
+    <link rel="stylesheet" href="rng_hack.css" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="hack2_pics/mouse_cursor_project_2_hack.png"
+    />
+    <style>
+      /* Center the content vertically on the screen */
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: var(--bg-1);
+      }
+      .container {
+        /* Add a slightly stronger style to the start screen container */
+        border: 1px solid var(--card);
+        padding: 40px 60px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        background: var(--bg-2);
+        max-width: 450px;
+        text-align: center;
+      }
+      .intro h1 {
+        font-size: 3rem;
+        margin-bottom: 10px;
+      }
+      .start-button {
+        /* Use the existing button style but with a larger size */
+        margin-top: 30px;
+        padding: 16px 40px;
+        font-size: 1.2rem;
+        transition: transform var(--transition);
+      }
+      .start-button:hover {
+        transform: scale(1.05);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="intro">
+        <h1>RNG Unlimited</h1>
+        <p>
+          Welcome to the simulator where luck is only a number. Click below to
+          try your roll!
+        </p>
+      </div>
+
+      <a href="./main_hack_2/rng_hack.html">
+        <button class="start-button">
+          Start Game
+        </button>
+      </a>
+    </div>
+  </body>
+</html>

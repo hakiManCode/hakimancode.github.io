@@ -33,27 +33,16 @@
         <p id="buff-text"></p>
         <button id="buy-buff">Buy 1.2x Multiplier (5000 Rolls)</button>
         <button id="toggle-buff" style="display: none">
-          Toggle Multiplier: OFF
+          Toggle Multiplier
         </button>
       </div>
 
       <div id="stats" class="stats">
-        <h2>Stats</h2>
+        <h2>Stats (Total Rolls: 0)</h2>
         <ul id="stats-list"></ul>
       </div>
 
-      <button
-        id="dev-unlock"
-        style="
-          position: fixed;
-          bottom: 10px;
-          right: 10px;
-          opacity: 0.3;
-          font-size: 10px;
-        "
-      >
-        Dev
-      </button>
+      <button id="dev-unlock">?</button>
 
       <div
         id="dev-panel"
@@ -86,6 +75,17 @@
           <label>
             <input type="checkbox" id="fast-roll-toggle" /> Fast Roll
           </label>
+          <a
+            href="show_cutscene.html"
+            style="
+              display: block;
+              margin-top: 10px;
+              color: #7ee7ff;
+              text-decoration: underline;
+              font-size: 0.9em;
+            "
+            >Test Cutscenes</a
+          >
         </div>
       </div>
 
@@ -100,8 +100,9 @@
     <div id="particle-container"></div>
 
     <div id="achievements-section">
-      <button id="toggle-achievements">Show Achievements</button>
+      <button id="toggle-achievements">Achievements</button>
       <div id="achievements-panel" style="display: none">
+        <h2>Achievements</h2>
         <ul id="achievements-list"></ul>
       </div>
     </div>
