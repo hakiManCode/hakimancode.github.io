@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Start - RNG Unlimited</title>
-    <link rel="stylesheet" href="rng_hack.css" />
+    <link rel="stylesheet" href="main_hack_2/rng_hack.css" />
     <link
       rel="icon"
       type="image/png"
@@ -18,30 +18,55 @@
         align-items: center;
         min-height: 100vh;
         background: var(--bg-1);
+        /* New subtle background animation */
+        background-size: 200% 200%;
+        animation: subtleBackgroundShift 60s linear infinite;
       }
       .container {
-        /* Add a slightly stronger style to the start screen container */
-        border: 1px solid var(--card);
-        padding: 40px 60px;
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
+        /* Enhanced Card Style */
+        border: 2px solid var(--card);
+        padding: 50px 70px;
+        border-radius: 20px;
+        box-shadow: 0 0 50px rgba(126, 231, 255, 0.15); /* Soft, glowing shadow */
         background: var(--bg-2);
-        max-width: 450px;
+        max-width: 500px;
         text-align: center;
+        /* Optional: Glass effect using existing variable */
+        backdrop-filter: blur(var(--glass-blur));
       }
       .intro h1 {
-        font-size: 3rem;
-        margin-bottom: 10px;
+        font-size: 3.5rem; /* Larger title */
+        color: var(--accent); /* Use the accent color */
+        text-shadow: 0 0 10px rgba(126, 231, 255, 0.5); /* Title glow */
+        margin-bottom: 5px;
+      }
+      .intro p {
+        color: var(--muted);
+        font-size: 1.1rem;
+        margin-bottom: 25px;
       }
       .start-button {
-        /* Use the existing button style but with a larger size */
+        /* Enhanced Button Style */
         margin-top: 30px;
-        padding: 16px 40px;
-        font-size: 1.2rem;
-        transition: transform var(--transition);
+        padding: 18px 50px;
+        font-size: 1.3rem;
+        background: linear-gradient(90deg, #7ee7ff, #b6faff); /* Bright gradient */
+        color: var(--bg-1); /* Dark text on light button */
+        border: none;
+        box-shadow: 0 4px 15px rgba(126, 231, 255, 0.4);
+        transition: all var(--transition);
+        font-weight: 800; /* Bold font */
       }
       .start-button:hover {
-        transform: scale(1.05);
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 8px 20px rgba(126, 231, 255, 0.6);
+      }
+
+      /* Keyframe for subtle background movement */
+      @keyframes subtleBackgroundShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
       }
     </style>
   </head>
@@ -50,12 +75,11 @@
       <div class="intro">
         <h1>RNG Unlimited</h1>
         <p>
-          Welcome to the simulator where luck is only a number. Click below to
-          try your roll!
+          Try your luck, and exceed beyond the limits.
         </p>
       </div>
 
-      <a href="./main_hack_2/rng_hack.html">
+      <a href="main_hack_2/rng_hack.html">
         <button class="start-button">
           Start Game
         </button>

@@ -9,15 +9,16 @@ const rarities = [
   { name: "Ultra Rare", color: "red", chance: 512 },
   { name: "Legendary", color: "orange", chance: 1024 },
   { name: "Mythic", color: "yellow", chance: 10000 },
+  { name: "Thunderous", color: "cyan", chance: 50000 }, // NEW CHANCE: 1 in 50,000
   { name: "Luminous", color: "#fffacd", chance: 125000 },
   { name: "Abyssal", color: "#00bfff", chance: 200000 },
-  // NEW RARITY: Apollo (Fiery)
   { name: "Apollo", color: "#ff4500", chance: 250000 },
 ];
 
 // -------------------- STORAGE / STATE --------------------
 let stats = JSON.parse(localStorage.getItem("stats")) || {};
 let pity = JSON.parse(localStorage.getItem("pity")) || { ultra: 0, legendary: 0, mythic: 0 };
+let guarantee_10k_pity = JSON.parse(localStorage.getItem("guarantee_10k_pity")) || 0; // NEW: Tracks rolls since last 10k+ rarity
 let rolling = false;
 let rollCount = rarities.reduce((sum, r) => sum + (stats[r.name] || 0), 0);
 let buffActive = JSON.parse(localStorage.getItem("buffActive")) || false;
@@ -32,11 +33,37 @@ updateBuffButton();
 // -------------------- UTILITY --------------------
 function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
+// Function to roll *only* from 10k+ rarities (used for guarantee)
+function getGuaranteedHighRarity(mythicMultiplier) {
+  const highRarities = rarities.filter(r => r.chance >= 10000); 
+  
+  const highTotalWeight = highRarities.reduce((sum, r) => {
+      let weight = 1 / r.chance;
+      if (r.name === "Mythic") weight *= mythicMultiplier;
+      return sum + weight;
+  }, 0);
+
+  let pick = Math.random() * highTotalWeight;
+  for (let r of highRarities) {
+      let weight = 1 / r.chance;
+      if (r.name === "Mythic") weight *= mythicMultiplier;
+      pick -= weight;
+      if (pick <= 0) return r;
+  }
+  return highRarities.find(r => r.name === "Mythic"); // Fallback
+}
+
+
 // Weighted rarity (actual roll)
 function getWeightedRarity() {
   const ultraMultiplier = pity.ultra >= 300 ? 10 : 1;
   const legendaryMultiplier = pity.legendary >= 700 ? 50 : 1;
   const mythicMultiplier = pity.mythic >= 1000 ? 100 : 1;
+  
+  // NEW: Guaranteed 10k+ logic
+  if (guarantee_10k_pity >= 300) {
+      return getGuaranteedHighRarity(mythicMultiplier);
+  }
 
   const totalWeight = rarities.reduce((sum, r) => {
     let weight = 1 / r.chance;
@@ -60,10 +87,61 @@ function getWeightedRarity() {
 
 // Fake cutscene uses the same weighting but doesn't affect stats/pity
 function getFakeRarity() {
-  return getWeightedRarity();
+  const ultraMultiplier = pity.ultra >= 300 ? 10 : 1;
+  const legendaryMultiplier = pity.legendary >= 700 ? 50 : 1;
+  const mythicMultiplier = pity.mythic >= 1000 ? 100 : 1;
+
+  // For fake roll, the guarantee is not forced, but the weighted logic is used.
+  
+  const totalWeight = rarities.reduce((sum, r) => {
+    let weight = 1 / r.chance;
+    if (r.name === "Ultra Rare") weight *= ultraMultiplier;
+    if (r.name === "Legendary") weight *= legendaryMultiplier;
+    if (r.name === "Mythic") weight *= mythicMultiplier;
+    return sum + weight;
+  }, 0);
+
+  let pick = Math.random() * totalWeight;
+  for (let r of rarities) {
+    let weight = 1 / r.chance;
+    if (r.name === "Ultra Rare") weight *= ultraMultiplier;
+    if (r.name === "Legendary") weight *= legendaryMultiplier;
+    if (r.name === "Mythic") weight *= mythicMultiplier;
+    pick -= weight;
+    if (pick <= 0) return r;
+  }
+  return rarities[0];
 }
 
 // -------------------- EFFECTS --------------------
+
+function lightningStrike() {
+  const original = document.body.style.background;
+  document.body.style.background = "cyan";
+  setTimeout(() => {
+    document.body.style.background = original;
+  }, 100);
+}
+
+function shakeWindow() {
+  let start = 0.75;
+  const duration = 750;
+  const startTime = Date.now();
+  const shake = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const progress = elapsed / duration;
+    const strength = start * (1 - progress);
+    if (progress >= 1) {
+      document.body.style.transform = "";
+      clearInterval(shake);
+      return;
+    }
+    const x = (Math.random() - 0.5) * 20 * strength;
+    const y = (Math.random() - 0.5) * 20 * strength;
+    document.body.style.transform = `translate(${x}px, ${y}px)`;
+  }, 16);
+}
+
 function triggerScreenEffect(rarity) {
   if (rarity.name === "Luminous") {
     luminousCutscene();
@@ -75,24 +153,32 @@ function triggerScreenEffect(rarity) {
     return;
   }
   
-  if (rarity.name === "Apollo") { // NEW CHECK
+  if (rarity.name === "Apollo") {
     apolloCutscene();
     return;
   }
-
+  
   const screen = document.getElementById("screen-effect");
   if (!screen) return;
   screen.className = "";
   void screen.offsetWidth;
   const cls = "effect-" + rarity.name.toLowerCase().replace(/\s+/g, "");
   screen.classList.add(cls);
+  
+  if (rarity.name === "Thunderous") { // NEW/RESTORED CHECK
+    lightningStrike();
+  }
 
   screen.style.opacity = "1";
   setTimeout(() => { screen.style.opacity = "0"; }, 320);
+  
+  if (rarity.name === "Thunderous") { // NEW/RESTORED CHECK
+    shakeWindow();
+  }
 }
 
 function spawnParticles(rarity) {
-  if (!["Epic", "Ultra Rare", "Legendary", "Mythic"].includes(rarity.name)) return;
+  if (!["Epic", "Ultra Rare", "Legendary", "Mythic", "Thunderous"].includes(rarity.name)) return;
   const container = document.getElementById("particle-container");
   if (!container) return;
   for (let i = 0; i < 30; i++) {
@@ -151,7 +237,7 @@ async function roll() {
       await luminousCutscene();
     } else if (result.name === "Abyssal") {
       await abyssalCutscene();
-    } else if (result.name === "Apollo") { // NEW CALL
+    } else if (result.name === "Apollo") {
       await apolloCutscene();
     }
 
@@ -172,6 +258,7 @@ async function roll() {
     stats[result.name] = (stats[result.name] || 0) + 1;
     localStorage.setItem("stats", JSON.stringify(stats));
 
+    // Update main pity counters
     pity.ultra = (pity.ultra || 0) + 1;
     pity.legendary = (pity.legendary || 0) + 1;
     pity.mythic = (pity.mythic || 0) + 1;
@@ -179,6 +266,15 @@ async function roll() {
     if (result.name === "Legendary") pity.legendary = 0;
     if (result.name === "Mythic") pity.mythic = 0;
     localStorage.setItem("pity", JSON.stringify(pity));
+    
+    // NEW: Update 10k+ Guarantee Pity
+    if (result.chance < 10000) {
+        guarantee_10k_pity++;
+    } else {
+        guarantee_10k_pity = 0;
+    }
+    localStorage.setItem("guarantee_10k_pity", guarantee_10k_pity);
+
 
     rollCount++;
     localStorage.setItem("rollCount", rollCount);
@@ -230,7 +326,7 @@ function updateStats() {
 function updatePity() {
   const list = document.getElementById("pity-list");
   if (!list) return;
-  list.innerHTML = `Ultra Rare: ${pity.ultra || 0}/300 | Legendary: ${pity.legendary || 0}/700 | Mythic: ${pity.mythic || 0}/1000`;
+  list.innerHTML = `Ultra Rare: ${pity.ultra || 0}/300 | Legendary: ${pity.legendary || 0}/700 | Mythic: ${pity.mythic || 0}/1000 | **10k+ Guarantee: ${guarantee_10k_pity}/300**`;
 }
 
 // -------------------- BUFF --------------------
@@ -262,8 +358,6 @@ document.getElementById('buy-buff')?.addEventListener('click', buyBuff);
 const achievements = JSON.parse(localStorage.getItem("achievements")) || {
   "10kRoll": false,
   "100kRoll": false,
-  "200kRoll": false,
-  "250kRoll": false, // NEW ACHIEVEMENT
 };
 
 function checkAchievements(rarity) {
@@ -275,14 +369,7 @@ function checkAchievements(rarity) {
     achievements["100kRoll"] = true;
     alert("🏆 Achievement Unlocked: Hit a 1 in 100,000+ rarity!");
   }
-  if (rarity.chance >= 200000 && !achievements["200kRoll"]) {
-    achievements["200kRoll"] = true;
-    alert("🏆 Achievement Unlocked: Hit a 1 in 200,000+ rarity (The Abyssal Plunge)!");
-  }
-  if (rarity.chance >= 250000 && !achievements["250kRoll"]) { // NEW CHECK
-    achievements["250kRoll"] = true;
-    alert("🏆 Achievement Unlocked: Hit a 1 in 250,000+ rarity (The Solar Forge)!");
-  }
+  
   localStorage.setItem("achievements", JSON.stringify(achievements));
   updateAchievementsUI();
 }
@@ -293,8 +380,6 @@ function updateAchievementsUI() {
   const data = [
     { id: "10kRoll", text: "Roll a 10k+ rarity" },
     { id: "100kRoll", text: "Roll a 100k+ rarity" },
-    { id: "200kRoll", text: "Roll a 200k+ rarity (Abyssal)" },
-    { id: "250kRoll", text: "Roll a 250k+ rarity (Apollo)" }, // NEW DISPLAY TEXT
   ];
   data.forEach(a => {
     const li = document.createElement("li");
@@ -468,7 +553,7 @@ async function abyssalCutscene() {
 }
 
 // -------------------- APOLLO CUTSCENE --------------------
-async function apolloCutscene() { // NEW FUNCTION
+async function apolloCutscene() { 
   const overlay = document.createElement("div");
   overlay.id = "apollo-overlay";
   overlay.innerHTML = `

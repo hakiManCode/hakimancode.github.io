@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Developer Cutscenes</title>
 <style>
-/* ... (CSS is unchanged) */
+/* ... (Existing CSS) */
   body {
     background: #0f1724;
     color: #e6eef8;
@@ -49,7 +49,7 @@
     background: conic-gradient(from 0deg, red,orange,yellow,green,blue,indigo,violet,red);
     animation: rainbowFlash 1.2s linear infinite;
   }
-  .effect-thunderous { background: rgba(255,255,255,0.25); }
+  .effect-thunderous { background: rgba(0,255,255,0.25); } /* ADDED: Thunderous effect style */
   @keyframes rainbowFlash {
     0% { filter: blur(2px) brightness(1); }
     50% { filter: blur(4px) brightness(1.3); }
@@ -134,7 +134,7 @@
     transition: background 1s ease; 
   }
 
-  /* ---------- Abyssal Cutscene (UPDATED) ---------- */
+  /* ---------- Abyssal Cutscene ---------- */
   #abyssal-overlay {
     position: fixed;
     inset: 0;
@@ -199,7 +199,7 @@
     transition: background 1s ease;
   }
   
-  /* ---------- Apollo Cutscene (NEW) ---------- */
+  /* ---------- Apollo Cutscene ---------- */
   #apollo-overlay {
     position: fixed;
     inset: 0;
@@ -289,48 +289,16 @@ const rarities = [
   { name: "Ultra Rare", color: "red", chance: 512 },
   { name: "Legendary", color: "orange", chance: 1024 },
   { name: "Mythic", color: "yellow", chance: 10000 },
-  { name: "Thunderous", color: "cyan", chance: 100000 }, // Assuming this was a previous dev rarity
+  { name: "Thunderous", color: "cyan", chance: 50000 }, // ADDED: Thunderous
   { name: "Luminous", color: "#fffacd", chance: 125000 },
   { name: "Abyssal", color: "#00bfff", chance: 200000 },
-  { name: "Apollo", color: "#ff4500", chance: 250000 }, // NEW RARITY
+  { name: "Apollo", color: "#ff4500", chance: 250000 },
 ];
 
 // ---------- UTILITY ----------
 function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
 // ---------- Effects (Updated) ----------
-function triggerScreenEffect(rarity) {
-  if (rarity.name === "Luminous") {
-    luminousCutscene();
-    return;
-  }
-  
-  if (rarity.name === "Abyssal") {
-    abyssalCutscene();
-    return;
-  }
-  
-  if (rarity.name === "Apollo") {
-    apolloCutscene();
-    return;
-  }
-
-  const screen = document.getElementById("screen-effect");
-  screen.className = "";
-  void screen.offsetWidth;
-
-  let cls = "effect-" + rarity.name.toLowerCase().replace(" ", "");
-  screen.classList.add(cls);
-
-  if (rarity.name === "Thunderous") {
-    lightningStrike();
-  }
-
-  screen.style.opacity = "1";
-  setTimeout(() => { screen.style.opacity = "0"; }, 300);
-
-  if (rarity.name === "Thunderous") shakeWindow();
-}
 
 function lightningStrike() {
   const original = document.body.style.background;
@@ -357,6 +325,41 @@ function shakeWindow() {
     const y = (Math.random() - 0.5) * 20 * strength;
     document.body.style.transform = `translate(${x}px, ${y}px)`;
   }, 16);
+}
+
+function triggerScreenEffect(rarity) {
+  if (rarity.name === "Luminous") {
+    luminousCutscene();
+    return;
+  }
+  
+  if (rarity.name === "Abyssal") {
+    abyssalCutscene();
+    return;
+  }
+  
+  if (rarity.name === "Apollo") {
+    apolloCutscene();
+    return;
+  }
+
+  const screen = document.getElementById("screen-effect");
+  screen.className = "";
+  void screen.offsetWidth;
+
+  let cls = "effect-" + rarity.name.toLowerCase().replace(/\s+/g, "");
+  screen.classList.add(cls);
+
+  if (rarity.name === "Thunderous") { // CHECK ADDED
+    lightningStrike();
+  }
+
+  screen.style.opacity = "1";
+  setTimeout(() => { screen.style.opacity = "0"; }, 300);
+
+  if (rarity.name === "Thunderous") { // CHECK ADDED
+    shakeWindow();
+  }
 }
 
 function spawnParticles(rarity) {
@@ -491,7 +494,7 @@ async function abyssalCutscene() {
   })();
 }
 
-// ---------- APOLLO CUTSCENE (UPDATED) ----------
+// ---------- APOLLO CUTSCENE ----------
 async function apolloCutscene() {
   const overlay = document.createElement("div");
   overlay.id = "apollo-overlay";
