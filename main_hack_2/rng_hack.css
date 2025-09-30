@@ -70,29 +70,6 @@ html,body{
 .output{ margin-top:20px; min-height:84px; display:flex; align-items:center; }
 #rarity{ font-size: clamp(20px, 4vw, 28px); font-weight: bold; transition: color 0.3s ease; }
 
-/* ---------- Stats ---------- */
-.stats, .pity{
-  max-width: var(--max-width);
-  margin: 20px auto;
-  padding: 20px;
-  background: var(--card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-.stats-grid{
-  display:grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
-  gap:16px; margin-top:12px;
-}
-.stat-card{
-  background: rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.05);
-  border-radius:10px;
-  padding:10px;
-  text-align:center;
-}
-.stat-card h3{ margin:0; font-size:16px; }
-.stat-card small{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
-
 /* ---------- Screen effect ---------- */
 #screen-effect {
   position: fixed;
@@ -298,12 +275,15 @@ html,body{
   border-radius: 50%;
   background: white;
   box-shadow: 0 0 8px cyan;
-  animation: floatUp 9s linear forwards;
+  /* UPDATED: Uses the new animation for slower, full-duration ascent */
+  animation: floatUpLuminous 10.5s linear forwards;
 }
 
-@keyframes floatUp {
-  from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(-120vh); opacity: 0; }
+/* Luminous specific float up animation */
+@keyframes floatUpLuminous {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  80% { opacity: 0.8; }
+  100% { transform: translateY(-110vh) scale(0.5); opacity: 0; }
 }
 
 @keyframes glowPulse {
@@ -313,6 +293,139 @@ html,body{
 
 #luminous-overlay.fade-white {
   background: white !important;
+  transition: background 1s ease;
+}
+
+
+/* ---------- Abyssal Cutscene ---------- */
+#abyssal-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000717; /* Very dark blue for deep ocean */
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  animation: fadeIn 1s ease forwards;
+}
+
+.abyssal-gradient {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 50%;
+  /* Dark blue to ultra-dark blue, simulating ocean depth */
+  background: linear-gradient(to top, #003c78, #000717);
+}
+
+.abyssal-title {
+  font-family: "Roboto Mono", monospace;
+  font-size: 3rem;
+  color: #a8dfff; /* Light blue/cyan */
+  z-index: 10001;
+  text-shadow: 0 0 15px #a8dfff, 0 0 25px #00ffff; /* Light blue/cyan glow */
+  animation: abyssalGlowPulse 2s infinite alternate;
+}
+
+@keyframes abyssalGlowPulse {
+  from { text-shadow: 0 0 10px #a8dfff, 0 0 20px #00ffff; }
+  to   { text-shadow: 0 0 25px #00ffff, 0 0 40px #a8dfff; }
+}
+
+#abyssal-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.abyssal-particle {
+  position: absolute;
+  width: 8px; /* Slightly larger particles (bubbles) */
+  height: 8px;
+  border-radius: 50%;
+  background: #00ffff; /* Cyan color */
+  box-shadow: 0 0 8px #00ffff;
+  /* Use the new animation with drift */
+  animation: floatUpAbyssal 10.5s linear forwards;
+}
+
+/* NEW: Abyssal specific float up animation with drift (using custom CSS property --drift-x) */
+@keyframes floatUpAbyssal {
+  /* Starts at its initial position (off-screen below) */
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  /* Drifts horizontally mid-way up */
+  50% { transform: translate(var(--drift-x), -55vh) scale(0.7); opacity: 0.9; }
+  /* Exits off the top, maintaining horizontal drift */
+  100% { transform: translate(var(--drift-x), -110vh) scale(0.4); opacity: 0; }
+}
+
+#abyssal-overlay.fade-blue {
+  background: #000f28 !important; /* Deep blue fade */
+  transition: background 1s ease;
+}
+
+/* ---------- Apollo Cutscene (NEW) ---------- */
+#apollo-overlay {
+  position: fixed;
+  inset: 0;
+  background: #330000; /* Dark red/black for volcanic feel */
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  animation: fadeIn 1s ease forwards;
+}
+
+.apollo-gradient {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 50%;
+  /* Red to yellow fade, like a furnace */
+  background: linear-gradient(to top, #ff4500, #330000);
+}
+
+.apollo-title {
+  font-family: "Roboto Mono", monospace;
+  font-size: 3rem;
+  color: #ffd700; /* Gold */
+  z-index: 10001;
+  text-shadow: 0 0 15px #ff4500, 0 0 25px #ffd700; /* Fiery glow */
+  animation: apolloGlowPulse 2s infinite alternate;
+}
+
+@keyframes apolloGlowPulse {
+  from { text-shadow: 0 0 10px #ff4500, 0 0 20px #ffd700; }
+  to   { text-shadow: 0 0 25px #ffd700, 0 0 40px #ff4500; }
+}
+
+#apollo-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.apollo-particle {
+  position: absolute;
+  width: 4px; /* Smaller, faster embers */
+  height: 4px;
+  border-radius: 50%;
+  background: #ff8c00; /* Dark orange */
+  box-shadow: 0 0 5px #ff4500;
+  /* Faster ascent, less float */
+  animation: floatUpApollo 6s linear forwards;
+}
+
+/* Fast, vertical, slightly erratic movement like flames/embers */
+@keyframes floatUpApollo {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-110vh) scale(0.2); opacity: 0; }
+}
+
+#apollo-overlay.fade-orange {
+  background: #ff8c00 !important; /* Deep orange fade */
   transition: background 1s ease;
 }
 

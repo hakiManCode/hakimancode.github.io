@@ -10,6 +10,9 @@ const rarities = [
   { name: "Legendary", color: "orange", chance: 1024 },
   { name: "Mythic", color: "yellow", chance: 10000 },
   { name: "Luminous", color: "#fffacd", chance: 125000 },
+  { name: "Abyssal", color: "#00bfff", chance: 200000 },
+  // NEW RARITY: Apollo (Fiery)
+  { name: "Apollo", color: "#ff4500", chance: 250000 },
 ];
 
 // -------------------- STORAGE / STATE --------------------
@@ -62,6 +65,21 @@ function getFakeRarity() {
 
 // -------------------- EFFECTS --------------------
 function triggerScreenEffect(rarity) {
+  if (rarity.name === "Luminous") {
+    luminousCutscene();
+    return;
+  }
+  
+  if (rarity.name === "Abyssal") {
+    abyssalCutscene();
+    return;
+  }
+  
+  if (rarity.name === "Apollo") { // NEW CHECK
+    apolloCutscene();
+    return;
+  }
+
   const screen = document.getElementById("screen-effect");
   if (!screen) return;
   screen.className = "";
@@ -131,7 +149,12 @@ async function roll() {
 
     if (result.name === "Luminous") {
       await luminousCutscene();
+    } else if (result.name === "Abyssal") {
+      await abyssalCutscene();
+    } else if (result.name === "Apollo") { // NEW CALL
+      await apolloCutscene();
     }
+
 
     display.style.transition = "none";
     display.style.transform = "translateY(-20px)";
@@ -239,6 +262,8 @@ document.getElementById('buy-buff')?.addEventListener('click', buyBuff);
 const achievements = JSON.parse(localStorage.getItem("achievements")) || {
   "10kRoll": false,
   "100kRoll": false,
+  "200kRoll": false,
+  "250kRoll": false, // NEW ACHIEVEMENT
 };
 
 function checkAchievements(rarity) {
@@ -250,6 +275,14 @@ function checkAchievements(rarity) {
     achievements["100kRoll"] = true;
     alert("🏆 Achievement Unlocked: Hit a 1 in 100,000+ rarity!");
   }
+  if (rarity.chance >= 200000 && !achievements["200kRoll"]) {
+    achievements["200kRoll"] = true;
+    alert("🏆 Achievement Unlocked: Hit a 1 in 200,000+ rarity (The Abyssal Plunge)!");
+  }
+  if (rarity.chance >= 250000 && !achievements["250kRoll"]) { // NEW CHECK
+    achievements["250kRoll"] = true;
+    alert("🏆 Achievement Unlocked: Hit a 1 in 250,000+ rarity (The Solar Forge)!");
+  }
   localStorage.setItem("achievements", JSON.stringify(achievements));
   updateAchievementsUI();
 }
@@ -260,6 +293,8 @@ function updateAchievementsUI() {
   const data = [
     { id: "10kRoll", text: "Roll a 10k+ rarity" },
     { id: "100kRoll", text: "Roll a 100k+ rarity" },
+    { id: "200kRoll", text: "Roll a 200k+ rarity (Abyssal)" },
+    { id: "250kRoll", text: "Roll a 250k+ rarity (Apollo)" }, // NEW DISPLAY TEXT
   ];
   data.forEach(a => {
     const li = document.createElement("li");
@@ -279,29 +314,33 @@ updateAchievementsUI();
 function showDevPanel() {
   const code = prompt("Enter dev access code:");
   if (code !== "h4ckc1ub") return alert("Wrong code.");
-  let panel = document.getElementById("dev-panel");
-  if (!panel) {
-    panel = document.createElement("div");
-    panel.id = "dev-panel";
-    panel.style.position = "fixed";
-    panel.style.bottom = "10px";
-    panel.style.right = "10px";
-    panel.style.background = "#222";
-    panel.style.color = "#fff";
-    panel.style.padding = "10px";
-    panel.style.borderRadius = "10px";
-    panel.innerHTML = `
-      <h4>Dev Panel</h4>
-      <label><input type="checkbox" id="fast-roll-toggle"> Fast Roll</label>
-    `;
-    document.body.appendChild(panel);
-    document.getElementById("fast-roll-toggle").addEventListener("change", (e) => {
-      fastRoll = e.target.checked;
-    });
-  }
+
+  const panel = document.getElementById("dev-panel");
+  panel.style.display = "block";
+
+  // Ensure the checkbox syncs with fastRoll
+  const fastToggle = document.getElementById("fast-roll-toggle");
+  fastToggle.checked = fastRoll;
+  fastToggle.addEventListener("change", (e) => {
+    fastRoll = e.target.checked;
+  });
+
+  // Minimize/expand functionality
+  const minimizeBtn = document.getElementById("dev-minimize");
+  const content = document.getElementById("dev-content");
+  minimizeBtn.onclick = () => {
+    if (content.style.display === "none") {
+      content.style.display = "block";
+      minimizeBtn.textContent = "_"; // collapse symbol
+    } else {
+      content.style.display = "none";
+      minimizeBtn.textContent = "+"; // expand symbol
+    }
+  };
 }
 
 document.getElementById("dev-unlock")?.addEventListener("click", showDevPanel);
+
 
 // -------------------- LUMINOUS CUTSCENE --------------------
 async function luminousCutscene() {
@@ -314,27 +353,46 @@ async function luminousCutscene() {
   `;
   document.body.appendChild(overlay);
 
-  // spawn glowing particles
-  for (let i = 0; i < 80; i++) {
+  const particleContainer = document.getElementById("luminous-particles");
+  
+  // Start continuous particle spawning (10 particles/second)
+  const particleInterval = setInterval(() => {
     const p = document.createElement("div");
     p.className = "luminous-particle";
+    
+    // Spawn horizontally random
     p.style.left = `${randInt(0, window.innerWidth)}px`;
-    p.style.top = `${window.innerHeight}px`;
-    document.getElementById("luminous-particles").appendChild(p);
-  }
+    
+    // Start just off-screen at the bottom (+ small random offset)
+    p.style.top = `${window.innerHeight + (Math.random() * 50)}px`; 
+    
+    // Stagger the movement start slightly
+    p.style.animationDelay = `${Math.random() * 0.5}s`;
+    
+    particleContainer.appendChild(p);
+  }, 100); 
 
-  // wait 9s, then fade to white + shake
-  await new Promise(res => setTimeout(res, 9000));
+  // 1. Wait for the main black screen phase (8 seconds)
+  await new Promise(res => setTimeout(res, 8000));
+  
+  // STOP the particle spawning loop
+  clearInterval(particleInterval);
 
+  // 2. Start the slow fade to white (1 second)
   overlay.classList.add("fade-white");
+  await new Promise(res => setTimeout(res, 1000));
 
-  let intensity = 20;
+  // 3. Start the heavy shake while the screen is fully white
+  let intensity = 100; // Increased intensity
   const start = Date.now();
-  const dur = 800;
+  const dur = 800; // Duration of the intense shake
   (function shakeFrame() {
     const elapsed = Date.now() - start;
     if (elapsed >= dur) {
       document.body.style.transform = "";
+      
+      // Cleanup the cutscene elements after the shake
+      setTimeout(() => overlay.remove(), 200);
       return;
     }
     const decay = 1 - elapsed / dur;
@@ -343,7 +401,129 @@ async function luminousCutscene() {
     document.body.style.transform = `translate(${x}px, ${y}px)`;
     requestAnimationFrame(shakeFrame);
   })();
+}
 
+// -------------------- ABYSSAL CUTSCENE --------------------
+async function abyssalCutscene() {
+  const overlay = document.createElement("div");
+  overlay.id = "abyssal-overlay";
+  overlay.innerHTML = `
+    <div class="abyssal-gradient"></div>
+    <h1 class="abyssal-title">RNG Unlimited</h1>
+    <div id="abyssal-particles"></div>
+  `;
+  document.body.appendChild(overlay);
+
+  const particleContainer = document.getElementById("abyssal-particles");
+  
+  // Start continuous particle spawning (Slower: 1 particle/150ms for more dispersed look)
+  const particleInterval = setInterval(() => {
+    const p = document.createElement("div");
+    p.className = "abyssal-particle";
+    
+    // Spawn horizontally random
+    p.style.left = `${randInt(0, window.innerWidth)}px`;
+    
+    // Start just off-screen at the bottom (+ small random offset)
+    p.style.top = `${window.innerHeight + (Math.random() * 50)}px`; 
+    
+    // Longer animation delay for a wave-like staggered start
+    p.style.animationDelay = `${Math.random() * 2}s`; 
+    
+    // Add random horizontal drift offset for aquatic feel
+    p.style.setProperty('--drift-x', `${(Math.random() - 0.5) * 50}px`);
+    
+    particleContainer.appendChild(p);
+  }, 150);
+
+  // 1. Wait for the main dark screen phase (8 seconds)
+  await new Promise(res => setTimeout(res, 8000));
+  
+  // STOP the particle spawning loop
+  clearInterval(particleInterval);
+
+  // 2. Start the slow fade to deep blue (1 second)
+  overlay.classList.add("fade-blue");
   await new Promise(res => setTimeout(res, 1000));
-  overlay.remove();
+
+  // 3. Start the heavy shake while the screen is fully blue
+  let intensity = 120; // Slightly stronger shake
+  const start = Date.now();
+  const dur = 800; // Duration of the intense shake
+  (function shakeFrame() {
+    const elapsed = Date.now() - start;
+    if (elapsed >= dur) {
+      document.body.style.transform = "";
+      
+      // Cleanup the cutscene elements after the shake
+      setTimeout(() => overlay.remove(), 200);
+      return;
+    }
+    const decay = 1 - elapsed / dur;
+    const x = (Math.random() - 0.5) * intensity * decay;
+    const y = (Math.random() - 0.5) * intensity * decay;
+    document.body.style.transform = `translate(${x}px, ${y}px)`;
+    requestAnimationFrame(shakeFrame);
+  })();
+}
+
+// -------------------- APOLLO CUTSCENE --------------------
+async function apolloCutscene() { // NEW FUNCTION
+  const overlay = document.createElement("div");
+  overlay.id = "apollo-overlay";
+  overlay.innerHTML = `
+    <div class="apollo-gradient"></div>
+    <h1 class="apollo-title">RNG Unlimited</h1>
+    <div id="apollo-particles"></div>
+  `;
+  document.body.appendChild(overlay);
+
+  const particleContainer = document.getElementById("apollo-particles");
+  
+  // Start continuous particle spawning (small, fast embers)
+  const particleInterval = setInterval(() => {
+    const p = document.createElement("div");
+    p.className = "apollo-particle";
+    
+    // UPDATED: Spawn horizontally across the entire screen
+    p.style.left = `${randInt(0, window.innerWidth)}px`; 
+    
+    // Start just off-screen at the bottom (+ small random offset)
+    p.style.top = `${window.innerHeight + (Math.random() * 50)}px`; 
+    
+    // Stagger the movement start slightly
+    p.style.animationDelay = `${Math.random() * 1}s`;
+    
+    particleContainer.appendChild(p);
+  }, 50); // Faster spawn rate
+
+  // 1. Wait for the main dark screen phase (8 seconds)
+  await new Promise(res => setTimeout(res, 8000));
+  
+  // STOP the particle spawning loop
+  clearInterval(particleInterval);
+
+  // 2. Start the slow fade to bright orange (1 second)
+  overlay.classList.add("fade-orange");
+  await new Promise(res => setTimeout(res, 1000));
+
+  // 3. Start the intense shake while the screen is fully orange/red
+  let intensity = 130; // Very intense shake
+  const start = Date.now();
+  const dur = 800; // Duration of the intense shake
+  (function shakeFrame() {
+    const elapsed = Date.now() - start;
+    if (elapsed >= dur) {
+      document.body.style.transform = "";
+      
+      // Cleanup the cutscene elements after the shake
+      setTimeout(() => overlay.remove(), 200);
+      return;
+    }
+    const decay = 1 - elapsed / dur;
+    const x = (Math.random() - 0.5) * intensity * decay;
+    const y = (Math.random() - 0.5) * intensity * decay;
+    document.body.style.transform = `translate(${x}px, ${y}px)`;
+    requestAnimationFrame(shakeFrame);
+  })();
 }

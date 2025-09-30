@@ -1,5 +1,3 @@
-<!-- UNFINISHED CODE -->
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -15,7 +13,6 @@
   </head>
   <body>
     <div class="container">
-      <!-- Intro -->
       <div class="intro">
         <h1>RNG Unlimited</h1>
         <p>
@@ -23,18 +20,15 @@
         </p>
       </div>
 
-      <!-- Roll Button -->
       <div class="interactions">
         <button id="rngbutton" onclick="roll()">Roll</button>
       </div>
 
-      <!-- Output -->
       <div class="output">
         <p id="rarity">Click "Roll" to start!</p>
         <p id="rarity-chance"></p>
       </div>
 
-      <!-- Buff Panel -->
       <div class="buff-panel">
         <p id="buff-text"></p>
         <button id="buy-buff">Buy 1.2x Multiplier (5000 Rolls)</button>
@@ -43,12 +37,11 @@
         </button>
       </div>
 
-      <!-- Stats Panel -->
       <div id="stats" class="stats">
         <h2>Stats</h2>
         <ul id="stats-list"></ul>
       </div>
-      <!-- Hidden Dev Unlock Button -->
+
       <button
         id="dev-unlock"
         style="
@@ -62,7 +55,6 @@
         Dev
       </button>
 
-      <!-- Dev Panel -->
       <div
         id="dev-panel"
         style="
@@ -97,20 +89,16 @@
         </div>
       </div>
 
-      <!-- Pity Panel -->
       <div id="pity" class="pity">
         <h2>Pity Counters</h2>
         <ul id="pity-list"></ul>
       </div>
     </div>
 
-    <!-- Screen Effect Overlay -->
     <div id="screen-effect"></div>
 
-    <!-- Particle Container -->
     <div id="particle-container"></div>
 
-    <!-- Achievements -->
     <div id="achievements-section">
       <button id="toggle-achievements">Show Achievements</button>
       <div id="achievements-panel" style="display: none">
@@ -118,7 +106,6 @@
       </div>
     </div>
 
-    <!-- JS -->
     <script src="rng_hack.js"></script>
   </body>
 </html>
